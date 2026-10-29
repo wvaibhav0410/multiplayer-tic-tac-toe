@@ -102,4 +102,4 @@ io.on('connection', socket => {
   socket.on('disconnect', () => leaveRoom(socket));
 });
 
-httpServer.listen(PORT, '0.0.0.0', () => console.log(`Namo Arena server listening on port ${PORT}`));
+httpServer.listen(PORT, '0.0.0.0', () => console.log(`NAMO Arena server listening on port ${PORT}`));

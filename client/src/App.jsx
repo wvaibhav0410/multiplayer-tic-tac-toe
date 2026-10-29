@@ -79,11 +79,11 @@ export default function App() {
           : `${opponent?.name || 'Opponent'} is thinking…`;
 
   return <main className="page-shell">
-    <header className="topbar"><a className="brand" href={window.location.pathname} onClick={e => { if (room) { e.preventDefault(); leaveRoom(); } }}><span className="brand-icon">✳</span> XO <span>ARENA</span></a><div className="connection"><span className={`status-dot ${connected ? 'online' : ''}`}/>{connected ? 'Live server' : 'Connecting…'}</div></header>
+    <header className="topbar"><a className="brand" href={window.location.pathname} onClick={e => { if (room) { e.preventDefault(); leaveRoom(); } }}><span className="brand-icon">✳</span> NAMO <span>ARENA</span></a><div className="connection"><span className={`status-dot ${connected ? 'online' : ''}`}/>{connected ? 'Live server' : 'Connecting…'}</div></header>
     <section className="hero"><div className="eyebrow"><span className="eyebrow-line"/> THE CLASSIC, CONNECTED <span className="eyebrow-line"/></div><h1>Small board.<br/><span>Big rivalry.</span></h1><p className="subtitle">Challenge a friend to a live game of Tic-Tac-Toe, wherever they are.</p></section>
 
     {!room ? <section className="lobby panel">
-      <div className="panel-heading"><div><p className="section-kicker">READY PLAYER ONE?</p><h2>Enter the arena</h2></div><span className="mini-symbol">X<span>O</span></span></div>
+      <div className="panel-heading"><div><p className="section-kicker">READY PLAYER ONE?</p><h2>Enter the arena</h2></div><span className="mini-symbol">NA<span>MO</span></span></div>
       <form onSubmit={joinRoom} className="lobby-form">
         <label htmlFor="player-name">YOUR DISPLAY NAME</label><input id="player-name" maxLength="20" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Alex" autoComplete="nickname" />
         <button type="button" className="primary-button create-button" onClick={createRoom} disabled={busy || !connected}>{busy ? 'One moment…' : '＋  Create a new game'}<span>→</span></button>
@@ -105,6 +105,6 @@ export default function App() {
       </div>
       <aside className="side-panel"><div className="side-card panel"><span className="side-icon">♟</span><p className="section-kicker">THE OBJECTIVE</p><h3>Three in a row.</h3><p>Line up three of your marks horizontally, vertically, or diagonally to win.</p><div className="example-board"><span className="ex-x">X</span><span className="ex-x">X</span><span className="ex-x">X</span><span/><span className="ex-o">O</span><span/><span className="ex-o">O</span><span/><span/></div><small className="example-caption">Like this. Simple.</small></div><div className="side-card tip-card"><span>✦</span><div><strong>Good strategy?</strong><p>Claim the center, watch for forks, and block your opponent’s winning line.</p></div></div></aside>
     </section>}
-    <footer><span>Namo ARENA</span><span>MADE FOR FRIENDLY COMPETITION</span><span>1 BOARD · 2 PLAYERS · INFINITE REMATCHES</span></footer>
+    <footer><span>NAMO ARENA</span><span>MADE FOR FRIENDLY COMPETITION</span><span>1 BOARD · 2 PLAYERS · INFINITE REMATCHES</span></footer>
   </main>;
 }
