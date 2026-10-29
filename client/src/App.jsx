@@ -105,6 +105,6 @@ export default function App() {
       </div>
       <aside className="side-panel"><div className="side-card panel"><span className="side-icon">♟</span><p className="section-kicker">THE OBJECTIVE</p><h3>Three in a row.</h3><p>Line up three of your marks horizontally, vertically, or diagonally to win.</p><div className="example-board"><span className="ex-x">X</span><span className="ex-x">X</span><span className="ex-x">X</span><span/><span className="ex-o">O</span><span/><span className="ex-o">O</span><span/><span/></div><small className="example-caption">Like this. Simple.</small></div><div className="side-card tip-card"><span>✦</span><div><strong>Good strategy?</strong><p>Claim the center, watch for forks, and block your opponent’s winning line.</p></div></div></aside>
     </section>}
-    <footer><span>XO ARENA</span><span>MADE FOR FRIENDLY COMPETITION</span><span>1 BOARD · 2 PLAYERS · INFINITE REMATCHES</span></footer>
+    <footer><span>Namo ARENA</span><span>MADE FOR FRIENDLY COMPETITION</span><span>1 BOARD · 2 PLAYERS · INFINITE REMATCHES</span></footer>
   </main>;
 }
