@@ -85,7 +85,7 @@ export default function App() {
     {!room ? <section className="lobby panel">
       <div className="panel-heading"><div><p className="section-kicker">READY PLAYER ONE?</p><h2>Enter the arena</h2></div><span className="mini-symbol">NA<span>MO</span></span></div>
       <form onSubmit={joinRoom} className="lobby-form">
-        <label htmlFor="player-name">YOUR DISPLAY NAME</label><input id="player-name" maxLength="20" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Alex" autoComplete="nickname" />
+        <label htmlFor="player-name">YOUR DISPLAY NAME</label><input id="player-name" maxLength="20" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Namo" autoComplete="nickname" />
         <button type="button" className="primary-button create-button" onClick={createRoom} disabled={busy || !connected}>{busy ? 'One moment…' : '＋  Create a new game'}<span>→</span></button>
         <div className="separator"><span/> OR JOIN A FRIEND <span/></div>
         <label htmlFor="room-code">ROOM CODE</label><input id="room-code" value={roomInput} onChange={e => setRoomInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))} placeholder="ENTER 6-LETTER CODE" maxLength="6" autoCapitalize="characters" />

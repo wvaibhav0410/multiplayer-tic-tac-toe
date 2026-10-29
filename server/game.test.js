@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { applyMove, getWinner } from './game.js';
 
 function room() {
-  return { code: 'ABC123', players: [{ id: 'x', name: 'Alex', mark: 'X' }, { id: 'o', name: 'Sam', mark: 'O' }], board: Array(9).fill(null), status: 'playing', currentTurn: 'X', winner: null, winningLine: [] };
+  return { code: 'ABC123', players: [{ id: 'x', name: 'Namo', mark: 'X' }, { id: 'o', name: 'Sam', mark: 'O' }], board: Array(9).fill(null), status: 'playing', currentTurn: 'X', winner: null, winningLine: [] };
 }
 test('detects horizontal, vertical and diagonal wins', () => {
   assert.deepEqual(getWinner(['X','X','X',null,null,null,null,null,null]).winningLine, [0,1,2]);
