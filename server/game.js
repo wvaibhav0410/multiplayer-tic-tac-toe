@@ -14,6 +14,47 @@ export function getWinner(board) {
   return null;
 }
 
+export function chooseComputerMove(board, computerMark = 'O') {
+  if (!Array.isArray(board) || board.length !== 9 || !['X', 'O'].includes(computerMark)) return null;
+  if (board.some(mark => mark !== null && mark !== 'X' && mark !== 'O')) return null;
+
+  const opponentMark = computerMark === 'X' ? 'O' : 'X';
+  let bestMove = null;
+  let bestScore = -Infinity;
+
+  for (let index = 0; index < board.length; index += 1) {
+    if (board[index] !== null) continue;
+    board[index] = computerMark;
+    const score = minimax(board, opponentMark, computerMark, 1);
+    board[index] = null;
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestMove = index;
+    }
+  }
+  return bestMove;
+}
+
+function minimax(board, currentMark, computerMark, depth) {
+  const result = getWinner(board);
+  if (result) return result.winner === computerMark ? 10 - depth : depth - 10;
+  if (board.every(Boolean)) return 0;
+
+  const maximizing = currentMark === computerMark;
+  let bestScore = maximizing ? -Infinity : Infinity;
+  const nextMark = currentMark === 'X' ? 'O' : 'X';
+
+  for (let index = 0; index < board.length; index += 1) {
+    if (board[index] !== null) continue;
+    board[index] = currentMark;
+    const score = minimax(board, nextMark, computerMark, depth + 1);
+    board[index] = null;
+    bestScore = maximizing ? Math.max(bestScore, score) : Math.min(bestScore, score);
+  }
+  return bestScore;
+}
+
 export function applyMove(room, playerId, index) {
   if (!room || room.status !== 'playing') return { error: 'This game is not accepting moves.' };
   if (!Number.isInteger(index) || index < 0 || index > 8) return { error: 'Choose a valid square.' };

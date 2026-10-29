@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { io } from 'socket.io-client';
+import { applyMove, chooseComputerMove } from '../../server/game.js';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || window.location.origin;
 const newSocket = () => io(SERVER_URL, { autoConnect: false, transports: ['websocket', 'polling'] });
@@ -14,6 +15,7 @@ export default function App() {
   const [name, setName] = useState('');
   const [roomInput, setRoomInput] = useState(getRoomFromUrl());
   const [room, setRoom] = useState(null);
+  const [computerGame, setComputerGame] = useState(false);
   const [playerId, setPlayerId] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
@@ -34,6 +36,22 @@ export default function App() {
     return () => { socket.removeAllListeners(); socket.disconnect(); };
   }, [socket]);
 
+  useEffect(() => {
+    if (!computerGame || room?.status !== 'playing' || room.currentTurn !== 'O') return undefined;
+    const timer = window.setTimeout(() => {
+      const index = chooseComputerMove(room.board);
+      if (index === null) {
+        setNotice('The computer could not make a move. Start a new game.');
+        return;
+      }
+      const nextRoom = { ...room, board: [...room.board], winningLine: [...room.winningLine] };
+      const result = applyMove(nextRoom, 'computer', index);
+      if (result.error) setNotice(result.error);
+      else setRoom(nextRoom);
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [computerGame, room]);
+
   const me = room?.players?.find(p => p.id === playerId);
   const opponent = room?.players?.find(p => p.id !== playerId);
   const isMyTurn = room?.status === 'playing' && room.currentTurn === me?.mark;
@@ -50,14 +68,45 @@ export default function App() {
     setBusy(true); setNotice('');
     socket.emit('room:create', { name: name.trim() || 'Player' });
   }
+  function startComputerGame() {
+    const humanName = name.trim() || 'Player';
+    setComputerGame(true);
+    setPlayerId('local-player');
+    setNotice('');
+    setRoom({
+      code: 'COMPUTER',
+      players: [{ id: 'local-player', name: humanName, mark: 'X' }, { id: 'computer', name: 'Computer', mark: 'O' }],
+      board: Array(9).fill(null),
+      status: 'playing',
+      currentTurn: 'X',
+      winner: null,
+      winningLine: []
+    });
+  }
   function makeMove(index) {
     if (!room || room.status !== 'playing' || !isMyTurn || room.board[index]) return;
+    if (computerGame) {
+      const nextRoom = { ...room, board: [...room.board], winningLine: [...room.winningLine] };
+      const result = applyMove(nextRoom, playerId, index);
+      if (result.error) setNotice(result.error);
+      else setRoom(nextRoom);
+      return;
+    }
     socket.emit('game:move', { code: room.code, index });
   }
-  function rematch() { socket.emit('game:rematch', { code: room?.code }); }
+  function rematch() {
+    if (computerGame && room) {
+      setNotice('');
+      setRoom({ ...room, board: Array(9).fill(null), status: 'playing', currentTurn: 'X', winner: null, winningLine: [] });
+      return;
+    }
+    socket.emit('game:rematch', { code: room?.code });
+  }
   function leaveRoom() {
-    socket.emit('room:leave', { code: room?.code });
+    if (!computerGame) socket.emit('room:leave', { code: room?.code });
+    setComputerGame(false);
     setRoom(null); setNotice('');
+    setPlayerId('');
     const url = new URL(window.location.href); url.searchParams.delete('room'); window.history.replaceState({}, '', url);
   }
   async function shareRoom() {
@@ -79,7 +128,7 @@ export default function App() {
           : `${opponent?.name || 'Opponent'} is thinking…`;
 
   return <main className="page-shell">
-    <header className="topbar"><a className="brand" href={window.location.pathname} onClick={e => { if (room) { e.preventDefault(); leaveRoom(); } }}><span className="brand-icon">✳</span> NAMO <span>ARENA</span></a><div className="connection"><span className={`status-dot ${connected ? 'online' : ''}`}/>{connected ? 'Live server' : 'Connecting…'}</div></header>
+    <header className="topbar"><a className="brand" href={window.location.pathname} onClick={e => { if (room) { e.preventDefault(); leaveRoom(); } }}><span className="brand-icon">✳</span> NAMO <span>ARENA</span></a><div className="connection"><span className={`status-dot ${connected || computerGame ? 'online' : ''}`}/>{computerGame ? 'Computer opponent' : connected ? 'Live server' : 'Connecting…'}</div></header>
     <section className="hero"><div className="eyebrow"><span className="eyebrow-line"/> THE CLASSIC, CONNECTED <span className="eyebrow-line"/></div><h1>Small board.<br/><span>Big rivalry.</span></h1><p className="subtitle">Challenge a friend to a live game of Tic-Tac-Toe, wherever they are.</p></section>
 
     {!room ? <section className="lobby panel">
@@ -87,6 +136,7 @@ export default function App() {
       <form onSubmit={joinRoom} className="lobby-form">
         <label htmlFor="player-name">YOUR DISPLAY NAME</label><input id="player-name" maxLength="20" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Namo" autoComplete="nickname" />
         <button type="button" className="primary-button create-button" onClick={createRoom} disabled={busy || !connected}>{busy ? 'One moment…' : '＋  Create a new game'}<span>→</span></button>
+        <button type="button" className="secondary-button computer-button" onClick={startComputerGame} disabled={busy}>Play against computer <span>✦</span></button>
         <div className="separator"><span/> OR JOIN A FRIEND <span/></div>
         <label htmlFor="room-code">ROOM CODE</label><input id="room-code" value={roomInput} onChange={e => setRoomInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))} placeholder="ENTER 6-LETTER CODE" maxLength="6" autoCapitalize="characters" />
         <button className="secondary-button" type="submit" disabled={busy || !connected || roomInput.trim().length < 4}>Join game <span>↗</span></button>
@@ -95,11 +145,11 @@ export default function App() {
       <div className="rules-strip"><span>✦</span><div><strong>Quick rules</strong><p>Get three of your marks in a row — across, down, or diagonal — before your opponent does.</p></div></div>
     </section> : <section className="game-layout">
       <div className="game-panel panel">
-        <div className="room-bar"><div><p className="section-kicker">ROOM CODE</p><button className="room-code" onClick={copyRoomCode} title="Copy room code" aria-label={copiedCode ? 'Room code copied' : 'Copy room code'}>{copiedCode ? '✓ Copied!' : <>{room.code} <span>▣</span></>}</button></div><button className="share-button" onClick={shareRoom}>{copied ? '✓ Copied!' : '↗ Invite friend'}</button></div>
-        <div className="players-row"><div className={`player-card ${me?.mark === 'X' && isMyTurn ? 'active' : ''}`}><span className="player-mark x-mark">X</span><div><strong>{room.players.find(p => p.mark === 'X')?.name || 'Waiting…'}</strong><small>PLAYER X {room.players.find(p => p.id === playerId && p.mark === 'X') ? '· YOU' : ''}</small></div></div><div className="vs">VS</div><div className={`player-card right-player ${me?.mark === 'O' && isMyTurn ? 'active' : ''}`}><span className="player-mark o-mark">O</span><div><strong>{room.players.find(p => p.mark === 'O')?.name || 'Waiting…'}</strong><small>PLAYER O {room.players.find(p => p.id === playerId && p.mark === 'O') ? '· YOU' : ''}</small></div></div></div>
+        <div className="room-bar"><div><p className="section-kicker">{computerGame ? 'SINGLE PLAYER' : 'ROOM CODE'}</p>{computerGame ? <span className="room-code">VS COMPUTER</span> : <button className="room-code" onClick={copyRoomCode} title="Copy room code" aria-label={copiedCode ? 'Room code copied' : 'Copy room code'}>{copiedCode ? '✓ Copied!' : <>{room.code} <span>▣</span></>}</button>}</div>{!computerGame && <button className="share-button" onClick={shareRoom}>{copied ? '✓ Copied!' : '↗ Invite friend'}</button>}</div>
+        <div className="players-row"><div className={`player-card ${me?.mark === 'X' && isMyTurn ? 'active' : ''}`}><span className="player-mark x-mark">X</span><div><strong>{room.players.find(p => p.mark === 'X')?.name || 'Waiting…'}</strong><small>PLAYER X {room.players.find(p => p.id === playerId && p.mark === 'X') ? '· YOU' : ''}</small></div></div><div className="vs">VS</div><div className={`player-card right-player ${me?.mark === 'O' && isMyTurn ? 'active' : ''}`}><span className="player-mark o-mark">O</span><div><strong>{room.players.find(p => p.mark === 'O')?.name || 'Waiting…'}</strong><small>PLAYER O {computerGame ? '· COMPUTER' : room.players.find(p => p.id === playerId && p.mark === 'O') ? '· YOU' : ''}</small></div></div></div>
         <div className={`turn-banner ${room.status === 'finished' ? 'finished' : ''}`}><span className="turn-pulse"/>{statusText}</div>
         <div className="board" role="group" aria-label="Tic-Tac-Toe board">{room.board.map((mark, i) => <button key={i} className={`cell ${mark === 'X' ? 'cell-x' : mark === 'O' ? 'cell-o' : ''} ${winningLine.includes(i) ? 'winning-cell' : ''}`} onClick={() => makeMove(i)} disabled={!isMyTurn || !!mark || room.status !== 'playing'} aria-label={`Row ${Math.floor(i / 3) + 1}, column ${(i % 3) + 1}${mark ? `, ${mark}` : ', empty'}`}>{mark && <span>{mark}</span>}</button>)}</div>
-        {room.status === 'finished' ? <button className="primary-button rematch-button" onClick={rematch}>↻ Play again</button> : <p className="board-hint">{room.status === 'waiting' ? 'Your game link is ready to share.' : 'Take your time. Your opponent sees every move live.'}</p>}
+        {room.status === 'finished' ? <button className="primary-button rematch-button" onClick={rematch}>↻ Play again</button> : <p className="board-hint">{room.status === 'waiting' ? 'Your game link is ready to share.' : computerGame ? 'You are X. The computer plays as O.' : 'Take your time. Your opponent sees every move live.'}</p>}
         {notice && <p className="notice" role="status">{notice}</p>}
         <button className="leave-button" onClick={leaveRoom}>← Leave game</button>
       </div>

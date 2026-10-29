@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyMove, getWinner } from './game.js';
+import { applyMove, chooseComputerMove, getWinner } from './game.js';
 
 function room() {
   return { code: 'ABC123', players: [{ id: 'x', name: 'Namo', mark: 'X' }, { id: 'o', name: 'Sam', mark: 'O' }], board: Array(9).fill(null), status: 'playing', currentTurn: 'X', winner: null, winningLine: [] };
@@ -9,6 +9,14 @@ test('detects horizontal, vertical and diagonal wins', () => {
   assert.deepEqual(getWinner(['X','X','X',null,null,null,null,null,null]).winningLine, [0,1,2]);
   assert.equal(getWinner(['O',null,null,'O',null,null,'O',null,null]).winner, 'O');
   assert.deepEqual(getWinner(['X',null,null,null,'X',null,null,null,'X']).winningLine, [0,4,8]);
+});
+test('computer takes a winning move and blocks an opponent win', () => {
+  assert.equal(chooseComputerMove(['O','O',null,'X','X',null,null,null,null]), 2);
+  assert.equal(chooseComputerMove(['X','X',null,'O',null,null,null,null,null]), 2);
+});
+test('computer returns no move for a full or invalid board', () => {
+  assert.equal(chooseComputerMove(['X','O','X','X','O','O','O','X','X']), null);
+  assert.equal(chooseComputerMove(Array(8).fill(null)), null);
 });
 test('accepts a legal move and alternates turns', () => {
   const game = room(); assert.equal(applyMove(game, 'x', 0).room.board[0], 'X'); assert.equal(game.currentTurn, 'O');

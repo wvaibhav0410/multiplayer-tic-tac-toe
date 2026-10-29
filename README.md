@@ -6,6 +6,7 @@ A responsive, real-time two-player Tic-Tac-Toe game built with React, Vite, CSS,
 
 - Create a private six-character room code and share the invite URL.
 - Two players join from separate browsers/devices; X starts, then turns alternate.
+- Play offline against an unbeatable computer opponent without creating a room.
 - Server-side validation rejects illegal moves, occupied squares, out-of-turn moves, and moves after the game ends.
 - Detects all eight winning lines and draws; winning cells are highlighted.
 - Rematch support, connection indicator, disconnect notices, responsive layout, and `/health` endpoint.
@@ -33,6 +34,8 @@ A responsive, real-time two-player Tic-Tac-Toe game built with React, Vite, CSS,
 
 4. Open the Vite URL printed in the terminal, normally `http://localhost:5173`.
 5. Create a game, copy the invite URL or room code, then open it in a second browser/device. For a second physical device on the same Wi-Fi, use your computer's LAN IP and ensure the firewall allows port 5173; configure `VITE_SERVER_URL` to the computer's LAN IP and port 3001 if needed, then restart Vite.
+
+To play alone, select **Play against computer** from the lobby. The computer plays as O.
 
 The Vite dev server runs on port 5173 and the Socket.IO/Express server on port 3001. If testing from a different device, set `VITE_SERVER_URL=http://YOUR_LAN_IP:3001` in a `.env` file in the project root and restart the dev server. The backend currently allows cross-origin Socket.IO connections for simple setup; restrict `CLIENT_ORIGIN` for a production deployment if desired.
 
